@@ -80,7 +80,7 @@ def posmv_nmea_listener():
             nsf.altitude = altitude
             position_pub.publish(nsf)
             bag.write('/posmv_nmea/position', nsf)
-        if nmea_parts[0] == '$GPVTG':
+        if nmea_parts[0] == '$GPHDT':
             heading = float(nmea_parts[1])
             nes = NavEulerStamped()
             nes.header.stamp = now
