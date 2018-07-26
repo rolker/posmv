@@ -88,6 +88,7 @@ def posmv_nmea_listener():
             nes.orientation.heading = heading
             orientation_pub.publish(nes)
             bag.write('/posmv_nmea/orientation', nes)
+    bag.close()
         
             
 
