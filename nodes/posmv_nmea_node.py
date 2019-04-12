@@ -53,7 +53,7 @@ def posmv_nmea_listener():
             if len(nmea_parts):
                 #print nmea_parts
                 try:
-                    if nmea_parts[0] == '$GPZDA' and len(nmea_parts) >= 5:
+                    if nmea_parts[0][3:] == 'ZDA' and len(nmea_parts) >= 5:
                         tref = TimeReference()
                         tref.header.stamp = now
                         hour = int(nmea_parts[1][0:2])
@@ -68,7 +68,7 @@ def posmv_nmea_listener():
                         tref.source = 'posmv'
                         timeref_pub.publish(tref)
                         bag.write('/posmv_nmea/time_reference', tref)
-                    if nmea_parts[0] == '$GPGGA' and len(nmea_parts) >= 10:
+                    if nmea_parts[0][3:] == 'GGA' and len(nmea_parts) >= 10:
                         latitude = int(nmea_parts[2][0:2])+float(nmea_parts[2][2:])/60.0
                         if nmea_parts[3] == 'S':
                             latitude = -latitude
@@ -84,7 +84,7 @@ def posmv_nmea_listener():
                         nsf.altitude = altitude
                         position_pub.publish(nsf)
                         bag.write('/posmv_nmea/position', nsf)
-                    if nmea_parts[0] == '$GPHDT' and len(nmea_parts) >= 2:
+                    if nmea_parts[0][3:] == 'HDT' and len(nmea_parts) >= 2:
                         heading = float(nmea_parts[1])
                         nes = NavEulerStamped()
                         nes.header.stamp = now
