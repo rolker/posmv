@@ -3,7 +3,6 @@
 import serial
 import socket
 import rospy
-import rosbag
 from  sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import TimeReference
 from marine_msgs.msg import NavEulerStamped
@@ -34,9 +33,6 @@ def posmv_nmea_listener():
     else:
         udp_out = None
             
-    timestamp = datetime.datetime.utcfromtimestamp(rospy.Time.now().to_time()).isoformat()
-    bag = rosbag.Bag('nodes/posmv_nmea_'+('-'.join(timestamp.split(':')))+'.bag', 'w', rosbag.Compression.BZ2)
-
     while not rospy.is_shutdown():
         if input_type == 'serial':
             nmea_ins = (serial_in.readline(),)
@@ -67,7 +63,6 @@ def posmv_nmea_listener():
                         tref.time_ref = rospy.Time(calendar.timegm(zda.timetuple()),zda.microsecond*1000)
                         tref.source = 'posmv'
                         timeref_pub.publish(tref)
-                        bag.write('/posmv_nmea/time_reference', tref)
                     if nmea_parts[0][3:] == 'GGA' and len(nmea_parts) >= 10:
                         latitude = int(nmea_parts[2][0:2])+float(nmea_parts[2][2:])/60.0
                         if nmea_parts[3] == 'S':
@@ -83,7 +78,6 @@ def posmv_nmea_listener():
                         nsf.longitude = longitude
                         nsf.altitude = altitude
                         position_pub.publish(nsf)
-                        bag.write('/posmv_nmea/position', nsf)
                     if nmea_parts[0][3:] == 'HDT' and len(nmea_parts) >= 2:
                         heading = float(nmea_parts[1])
                         nes = NavEulerStamped()
@@ -91,10 +85,8 @@ def posmv_nmea_listener():
                         nes.header.frame_id = 'posmv_operator'
                         nes.orientation.heading = heading
                         orientation_pub.publish(nes)
-                        bag.write('/posmv_nmea/orientation', nes)
                 except ValueError:
                     pass
-    bag.close()
         
             
 

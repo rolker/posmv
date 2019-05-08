@@ -2,7 +2,6 @@
 
 import posmv
 import rospy
-import rosbag
 from  sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import TimeReference
 from marine_msgs.msg import NavEulerStamped
@@ -46,8 +45,6 @@ def posmv_listener():
     gps_week = None
     gps_utc_offset = None
 
-    timestamp = datetime.datetime.utcfromtimestamp(rospy.Time.now().to_time()).isoformat()
-    bag = rosbag.Bag('nodes/posmv_'+('-'.join(timestamp.split(':')))+'.bag', 'w', rosbag.Compression.BZ2)
     while not rospy.is_shutdown():
         data = pos.read((1,3))
         #print data
@@ -61,7 +58,6 @@ def posmv_listener():
                   tref.time_ref = rospy.Time(calendar.timegm(pos_now.timetuple()),pos_now.microsecond*1000)
                   tref.source = 'posmv'
                   timeref_pub.publish(tref)
-                  bag.write('/posmv/time_reference', tref)
                   nsf = NavSatFix()
                   nsf.header.stamp = now
                   nsf.header.frame_id = 'posmv'
@@ -69,7 +65,6 @@ def posmv_listener():
                   nsf.longitude = d['longitude']
                   nsf.altitude = d['altitude']
                   position_pub.publish(nsf)
-                  bag.write('/posmv/position', nsf)
                   nes = NavEulerStamped()
                   nes.header.stamp = now
                   nes.header.frame_id = 'posmv'
@@ -77,7 +72,6 @@ def posmv_listener():
                   nes.orientation.pitch = d['vessel_pitch']
                   nes.orientation.heading = d['vessel_heading']
                   orientation_pub.publish(nes)
-                  bag.write('/posmv/orientation', nes)
            if d['group_id'] == 3:
               gps_week = d['gps_utc_week_number']
               gps_utc_offset = d['gps_utc_time_offset']
