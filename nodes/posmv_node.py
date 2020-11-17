@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import division
+from past.utils import old_div
 import posmv
 import rospy
 from  sensor_msgs.msg import NavSatFix
@@ -22,7 +24,7 @@ def decode_time(d, gps_week, offset):
     if gps_week is None:
         return None
     t1_type = d['time_types']&0x0f
-    t2_type = d['time_types']/0x0f
+    t2_type = old_div(d['time_types'],0x0f)
     if t1_type == 2:
         return weeksecondstoutc(gps_week,d['time1'],0)
     elif t1_type == 1:

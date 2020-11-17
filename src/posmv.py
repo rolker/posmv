@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from builtins import range
+from builtins import object
 import socket
 import struct
 
 # messages configured on CW4: 1,2,3,4,5,7,9,10,99,102,110-113,10001,10007-10009,10011-10012
 
-class Posmv:
+class Posmv(object):
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('',5602))
@@ -81,7 +84,7 @@ class Posmv:
                                 grp['gps_receiver_raw_data'] = self.data_buffer[34+8:34+8+var_msg_byte_count]
                         
                     else:
-                        print grp['group_id'],'not handled    !!!!'
+                        print(grp['group_id'],'not handled    !!!!')
                     ret.append(grp)
             self.data_buffer = self.data_buffer[byte_count+8:]
             
@@ -92,5 +95,5 @@ if __name__ == '__main__':
     p = Posmv()
     while True:
         for g in p.read():
-            print g['group_id']
+            print(g['group_id'])
         
