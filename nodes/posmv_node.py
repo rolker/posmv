@@ -35,12 +35,11 @@ def decode_time(d, gps_week, offset):
         return weeksecondstoutc(gps_weel,d['time2'],offset)
     return None
 
-
 def posmv_listener():
-    position_pub = rospy.Publisher('/posmv/position',NavSatFix,queue_size=10)
-    timeref_pub = rospy.Publisher('/posmv/time_reference',TimeReference,queue_size=10)
-    orientation_pub = rospy.Publisher('/posmv/orientation',NavEulerStamped,queue_size=10)
     rospy.init_node('posmv')
+    position_pub = rospy.Publisher('posmv/position',NavSatFix,queue_size=10)
+    timeref_pub = rospy.Publisher('posmv/time_reference',TimeReference,queue_size=10)
+    orientation_pub = rospy.Publisher('posmv/orientation',NavEulerStamped,queue_size=10)
     
     pos = posmv.Posmv()
 
@@ -67,6 +66,7 @@ def posmv_listener():
                   nsf.longitude = d['longitude']
                   nsf.altitude = d['altitude']
                   position_pub.publish(nsf)
+
                   nes = NavEulerStamped()
                   nes.header.stamp = now
                   nes.header.frame_id = 'posmv'
@@ -74,6 +74,7 @@ def posmv_listener():
                   nes.orientation.pitch = d['vessel_pitch']
                   nes.orientation.heading = d['vessel_heading']
                   orientation_pub.publish(nes)
+                  
            if d['group_id'] == 3:
               gps_week = d['gps_utc_week_number']
               gps_utc_offset = d['gps_utc_time_offset']
