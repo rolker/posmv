@@ -9,11 +9,11 @@ import struct
 # messages configured on CW4: 1,2,3,4,5,7,9,10,99,102,110-113,10001,10007-10009,10011-10012
 
 class Posmv(object):
-    def __init__(self):
+    def __init__(self, address='', port=5602):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(('',5602))
+        self.sock.bind((address,port))
         self.sock.settimeout(1.0)
-        self.data_buffer = ''
+        self.data_buffer = b''
         
     def read(self, msg_filter=None):
         ret = []
@@ -22,8 +22,8 @@ class Posmv(object):
             self.data_buffer += data
         except socket.timeout:
             pass
-        while '$GRP' in self.data_buffer:
-            i = self.data_buffer.find('$GRP')
+        while b'$GRP' in self.data_buffer:
+            i = self.data_buffer.find(b'$GRP')
             if i < 0:
                 break
             self.data_buffer = self.data_buffer[i:]
@@ -31,8 +31,8 @@ class Posmv(object):
                 break
             grp = {}
             grp['group_id'],byte_count = struct.unpack('<HH',self.data_buffer[4:8])
-            #if grp['group_id'] != 4:
-            #    print 'group:',grp['group_id'],'size:',byte_count
+            if grp['group_id'] != 4:
+                print ('group:',grp['group_id'],'size:',byte_count)
                 
             if len(self.data_buffer) < byte_count+8:
                 break
