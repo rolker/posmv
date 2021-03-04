@@ -4,11 +4,10 @@ from __future__ import division
 from past.utils import old_div
 import posmv
 import rospy
-from  sensor_msgs.msg import NavSatFix
-from  sensor_msgs.msg import Imu
+from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import Imu
 from sensor_msgs.msg import TimeReference
 from geometry_msgs.msg import TwistWithCovarianceStamped
-from marine_msgs.msg import NavEulerStamped
 import datetime
 import calendar
 import tf.transformations
@@ -46,12 +45,10 @@ def posmv_listener():
     listen_port = rospy.get_param('~listen_port', 5602)
     
     posmv_frame = rospy.get_param('~posmv_frame', 'posmv')
-    map_frame = rospy.get_param('~map_frame', 'map')
     
     position_pub = rospy.Publisher('posmv/position',NavSatFix,queue_size=10)
     timeref_pub = rospy.Publisher('posmv/time_reference',TimeReference,queue_size=10)
-    orientation_pub = rospy.Publisher('posmv/orientation',NavEulerStamped,queue_size=10)
-    imu_pub = rospy.Publisher('posmv/imu',Imu,queue_size=10)
+    orientation_pub = rospy.Publisher('posmv/orientation',Imu,queue_size=10)
     velocity_pub = rospy.Publisher('posmv/velocity',TwistWithCovarianceStamped,queue_size=10)
     
     pos = posmv.Posmv()
@@ -88,18 +85,11 @@ def posmv_listener():
                 nsf.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
               position_pub.publish(nsf)
 
-              nes = NavEulerStamped()
-              nes.header.stamp = now
-              nes.header.frame_id = posmv_frame
-              nes.orientation.roll = d['vessel_roll']
-              nes.orientation.pitch = d['vessel_pitch']
-              nes.orientation.heading = d['vessel_heading']
-              orientation_pub.publish(nes)
-
               imu = Imu()                  
               imu.header.stamp = now
               imu.header.frame_id = posmv_frame
-              q = tf.transformations.quaternion_from_euler(math.radians(d['vessel_roll']), math.radians(-d['vessel_pitch']), math.radians(90-d['vessel_heading']), 'rzyx')
+              q = tf.transformations.quaternion_from_euler(math.radians(90.0-d['vessel_heading']), math.radians(-d['vessel_pitch']), math.radians(d['vessel_roll']), 'rzyx')
+              
               imu.orientation.x = q[0]
               imu.orientation.y = q[1]
               imu.orientation.z = q[2]
@@ -121,25 +111,28 @@ def posmv_listener():
               # This is based on a commonly used "discrete noise process model" used to model the uncertainty for the model part of a Kalman Filter. I think it should be a reasonable estimate. (ref: Estimation with Applications to Tracking and Navigation")￼
               # It might be good to annotate that in a comment. Section 3.3.3, page 274. Authors are Bar-Shalom, Li and Kirubarajan
 
-              imu_pub.publish(imu)
+              orientation_pub.publish(imu)
+
+              velocity_map = (d['east_velocity'],d['north_velocity'],-d['down_velocity'],0)
+              qc = tf.transformations.quaternion_conjugate(q)
+              velocity_base = tf.transformations.quaternion_multiply(tf.transformations.quaternion_multiply(qc, velocity_map), tf.transformations.quaternion_conjugate(qc))[:3]
+
 
               twcs = TwistWithCovarianceStamped()
               twcs.header.stamp = now
-              twcs.header.frame_id = map_frame
-              twcs.twist.twist.linear.x = d['east_velocity']
-              twcs.twist.twist.linear.y = d['north_velocity']
-              twcs.twist.twist.linear.z = -d['down_velocity']
+              twcs.header.frame_id = posmv_frame
+              twcs.twist.twist.linear.x = velocity_base[0]
+              twcs.twist.twist.linear.y = velocity_base[1]
+              twcs.twist.twist.linear.z = velocity_base[2]
               if group_2 is not None:
-                twcs.twist.covariance[0] = group_2['east_velocity_rms_error']**2
-                twcs.twist.covariance[7] = group_2['north_velocity_rms_error']**2
-                twcs.twist.covariance[14] = group_2['down_velocity_rms_error']**2
-              # since out angular velocities are in body, not map, don't report them here
-              twcs.twist.twist.angular.x = float('NaN')
-              twcs.twist.twist.angular.y = float('NaN')
-              twcs.twist.twist.angular.z = float('NaN')
-              velocity_pub.publish(twcs)
+                velocity_rms_map = (group_2['east_velocity_rms_error'],group_2['north_velocity_rms_error'],group_2['down_velocity_rms_error'],0)
+                velocity_rms_base = tf.transformations.quaternion_multiply(tf.transformations.quaternion_multiply(q, velocity_rms_map), tf.transformations.quaternion_conjugate(q))[:3]
 
-                  
+                twcs.twist.covariance[0] = velocity_rms_base[0]**2
+                twcs.twist.covariance[7] = velocity_rms_base[1]**2
+                twcs.twist.covariance[14] = velocity_rms_base[2]**2
+              twcs.twist.twist.angular = imu.angular_velocity
+              velocity_pub.publish(twcs)
                   
            if d['group_id'] == 2:                  
              group_2 = d

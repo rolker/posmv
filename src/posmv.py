@@ -31,8 +31,8 @@ class Posmv(object):
                 break
             grp = {}
             grp['group_id'],byte_count = struct.unpack('<HH',self.data_buffer[4:8])
-            if grp['group_id'] != 4:
-                print ('group:',grp['group_id'],'size:',byte_count)
+            #if grp['group_id'] != 4:
+            #    print ('group:',grp['group_id'],'size:',byte_count)
                 
             if len(self.data_buffer) < byte_count+8:
                 break
