@@ -113,24 +113,16 @@ def posmv_listener():
 
               orientation_pub.publish(imu)
 
-              velocity_map = (d['east_velocity'],d['north_velocity'],-d['down_velocity'],0)
-              qc = tf.transformations.quaternion_conjugate(q)
-              velocity_base = tf.transformations.quaternion_multiply(tf.transformations.quaternion_multiply(qc, velocity_map), tf.transformations.quaternion_conjugate(qc))[:3]
-
-
               twcs = TwistWithCovarianceStamped()
               twcs.header.stamp = now
               twcs.header.frame_id = posmv_frame
-              twcs.twist.twist.linear.x = velocity_base[0]
-              twcs.twist.twist.linear.y = velocity_base[1]
-              twcs.twist.twist.linear.z = velocity_base[2]
+              twcs.twist.twist.linear.x = d['east_velocity']
+              twcs.twist.twist.linear.y = d['north_velocity']
+              twcs.twist.twist.linear.z = -d['down_velocity']
               if group_2 is not None:
-                velocity_rms_map = (group_2['east_velocity_rms_error'],group_2['north_velocity_rms_error'],group_2['down_velocity_rms_error'],0)
-                velocity_rms_base = tf.transformations.quaternion_multiply(tf.transformations.quaternion_multiply(q, velocity_rms_map), tf.transformations.quaternion_conjugate(q))[:3]
-
-                twcs.twist.covariance[0] = velocity_rms_base[0]**2
-                twcs.twist.covariance[7] = velocity_rms_base[1]**2
-                twcs.twist.covariance[14] = velocity_rms_base[2]**2
+                twcs.twist.covariance[0] = group_2['east_velocity_rms_error']**2
+                twcs.twist.covariance[7] = group_2['north_velocity_rms_error']**2
+                twcs.twist.covariance[14] = group_2['down_velocity_rms_error']**2
               twcs.twist.twist.angular = imu.angular_velocity
               velocity_pub.publish(twcs)
                   
