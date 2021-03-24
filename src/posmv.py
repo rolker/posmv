@@ -14,12 +14,14 @@ class Posmv(object):
         self.sock.bind((address,port))
         self.sock.settimeout(1.0)
         self.data_buffer = b''
+        self.address = None
         
     def read(self, msg_filter=None):
         ret = []
         try:
             data,address = self.sock.recvfrom(4096)
             self.data_buffer += data
+            self.address = address
         except socket.timeout:
             pass
         while b'$GRP' in self.data_buffer:
