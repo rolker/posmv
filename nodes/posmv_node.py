@@ -142,49 +142,42 @@ def posmv_listener():
             velocity_pub.publish(twcs)
 
             ds = DiagnosticStatus()
-            ds.name = 'posmv_alignment'
-            ds.message = 'Alignment Status'
+            ds.name = 'posmv/alignment_status'
             ds.hardware_id = str(pos.address)
             ds.values.append(KeyValue('code',str(d['alignment_status'])))
+
+            status_table = (('Full navigation','User accuracies are met'),
+                            ('Fine alignment is active','RMS heading error is less than 15 degrees'),
+                            ('GC CHI 2','alignment with GPS, RMS heading error is greater than 15 degrees'),
+                            ('PC CHI 2','alignment without GPS, RMS heading error is greater than 15 degrees'),
+                            ('GC CHI 1','alignment with GPS, RMS heading error is greater than 45 degrees'),
+                            ('PC CHI 1','alignment without GPS, RMS heading error is greater than 45 degrees'),
+                            ('Coarse leveling is active',''),
+                            ('Initial solution assigned',''),
+                            ('No valid solution','')
+            )
+
+            if d['alignment_status'] >= 0 and d['alignment_status'] < len(status_table):
+              ds.message = status_table[d['alignment_status']][0]
+              ds.values.append(KeyValue('description', status_table[d['alignment_status']][0]))
+              ds.values.append(KeyValue('note',status_table[d['alignment_status']][1]))
+            else:
+              ds.message = "Invalid alignment status"
+
             if d['alignment_status'] == 0:
               ds.level = DiagnosticStatus.OK
-              ds.values.append(KeyValue('description','Full navigation'))
-              ds.values.append(KeyValue('note','User accuracies are met'))
             elif d['alignment_status'] > 0 and d['alignment_status'] <= 3:
               ds.level = DiagnosticStatus.WARN
-              if d['alignment_status'] == 1:
-                ds.values.append(KeyValue('description','Fine alignment is active'))
-                ds.values.append(KeyValue('note','RMS heading error is less than 15 degrees'))
-              if d['alignment_status'] == 2:
-                ds.values.append(KeyValue('description','GC CHI 2'))
-                ds.values.append(KeyValue('note','alignment with GPS, RMS heading error is greater than 15 degrees'))
-              if d['alignment_status'] == 3:
-                ds.values.append(KeyValue('description','PC CHI 2'))
-                ds.values.append(KeyValue('note','alignment without GPS, RMS heading error is greater than 15 degrees'))
             elif d['alignment_status'] > 3:
               ds.level = DiagnosticStatus.ERROR
-              if d['alignment_status'] == 4:
-                ds.values.append(KeyValue('description','GC CHI 1'))
-                ds.values.append(KeyValue('note','alignment with GPS, RMS heading error is greater than 45 degrees'))
-              if d['alignment_status'] == 5:
-                ds.values.append(KeyValue('description','PC CHI 1'))
-                ds.values.append(KeyValue('note','alignment without GPS, RMS heading error is greater than 45 degrees'))
-              if d['alignment_status'] == 6:
-                ds.values.append(KeyValue('description','Coarse leveling is active'))
-                ds.values.append(KeyValue('note',''))
-              if d['alignment_status'] == 7:
-                ds.values.append(KeyValue('description','Initial solution assigned'))
-                ds.values.append(KeyValue('note',''))
-              if d['alignment_status'] == 8:
-                ds.values.append(KeyValue('description','No valid solution'))
-                ds.values.append(KeyValue('note',''))
+
             last_group_1_diag = ds
             last_group_1_diag_time = now
                 
         if d['group_id'] == 2:                  
             group_2 = d
             ds = DiagnosticStatus()
-            ds.name = 'posmv_performance'
+            ds.name = 'posmv/performance'
             ds.message = 'Vessel Navigation Performance Metrics'
             ds.hardware_id = str(pos.address)
             for k in ('north_position_rms_error', 'east_position_rms_error', 'down_position_rms_error', 'north_velocity_rms_error', 'east_velocity_rms_error', 'down_velocity_rms_error', 'roll_rms_error', 'pitch_rms_error',  'heading_rms_error', 'error_ellipsoid_semi-major', 'error_ellipsoid_semi-minor', 'error_ellipsoid_orientation'):
@@ -204,19 +197,24 @@ def posmv_listener():
       diag_array.header.stamp = rospy.Time.now()
 
       ds = DiagnosticStatus()
-      ds.name = 'posmv_network'
-      ds.message = 'Network Timeout'
+      ds.name = 'posmv/network'
       if last_data_time is None:
         ds.level = DiagnosticStatus.ERROR
+        ds.message = 'Network Timeout'
         ds.values.append(KeyValue('time_since_last_data','never'))
       else:
         age = now - last_data_time
         if age > rospy.Duration(5):
           ds.level = DiagnosticStatus.ERROR
+          ds.message = 'Network Timeout'
         elif age > rospy.Duration(1):
           ds.level = DiagnosticStatus.WARN
+          ds.message = 'Network Lagging'
+
         else:
           ds.level = DiagnosticStatus.OK
+          ds.message = 'Network OK'
+
         ds.values.append(KeyValue('time_since_last_data',str(age.to_sec())))
       diag_array.status.append(ds)
 
