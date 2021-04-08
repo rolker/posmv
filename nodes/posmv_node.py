@@ -2,7 +2,7 @@
 
 from __future__ import division
 from past.utils import old_div
-import posmv
+from posmv import posmv
 import rospy
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import Imu
