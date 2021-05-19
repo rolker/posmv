@@ -201,9 +201,10 @@ def posmv_listener():
               navsat_status = NavSatStatus()
               navsat_status.service = NavSatStatus.SERVICE_GPS
             navsat_status.status = NavSatStatus.STATUS_NO_FIX
+            #print ('navigation_solution_status:',d['navigation_solution_status'])
             if d['navigation_solution_status'] in (1, 2, 8):
               navsat_status.status = NavSatStatus.STATUS_FIX
-            if d['navigation_solution_status'] in (3, 4, 5, 6, 7):
+            if d['navigation_solution_status'] in (3, 4, 5, 6, 7, 16):
               navsat_status.status = NavSatStatus.STATUS_GBAS_FIX
             if d['navigation_solution_status'] in (9, 10, 11, 12, 13, 15):
               navsat_status.status = NavSatStatus.STATUS_FIX
