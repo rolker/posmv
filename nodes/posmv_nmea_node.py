@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import serial
 import socket
@@ -14,12 +14,12 @@ def posmv_nmea_listener():
     timeref_pub = rospy.Publisher('/base/time_reference',TimeReference,queue_size=10)
     orientation_pub = rospy.Publisher('/base/orientation',NavEulerStamped,queue_size=10)
     rospy.init_node('posmv_nmea')
-    input_type = rospy.get_param('/posmv_nmea/input_type')
-    input_address = rospy.get_param('/posmv_nmea/input','')
-    input_speed = rospy.get_param('/posmv_nmea/input_speed',0)
-    input_port = int(rospy.get_param('/posmv_nmea/input_port',0))
-    output_port = int(rospy.get_param('/posmv_nmea/output',0))
-    output_address = rospy.get_param('/posmv_nmea/output_address','<broadcast>')
+    input_type = rospy.get_param('~input_type')
+    input_address = rospy.get_param('~input','')
+    input_speed = rospy.get_param('/~input_speed',0)
+    input_port = int(rospy.get_param('~input_port',0))
+    output_port = int(rospy.get_param('~output',0))
+    output_address = rospy.get_param('~output_address','<broadcast>')
     
     if input_type == 'serial':
         serial_in = serial.Serial(input_address, int(input_speed))
@@ -38,14 +38,15 @@ def posmv_nmea_listener():
             nmea_ins = (serial_in.readline(),)
             #print nmea_in
             if udp_out is not None:
-                udp_out.sendto(nmea_in, (output_address,output_port))
+                for nmea_in in nmea_ins:
+                    udp_out.sendto(nmea_in, (output_address,output_port))
         else:
             nmea_in,addr = udp_in.recvfrom(2048)
-            print addr, nmea_in
+            print (addr, nmea_in)
             nmea_ins = nmea_in.split('\n')
         now = rospy.get_rostime()
         for nmea_in in nmea_ins:
-            nmea_parts = nmea_in.strip().split(',')
+            nmea_parts = nmea_in.decode('utf-8').strip().split(',')
             if len(nmea_parts):
                 #print nmea_parts
                 try:
