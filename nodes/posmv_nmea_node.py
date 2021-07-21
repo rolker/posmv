@@ -46,50 +46,51 @@ def posmv_nmea_listener():
             nmea_ins = nmea_in.split('\n')
         now = rospy.get_rostime()
         for nmea_in in nmea_ins:
-            nmea_parts = nmea_in.decode('utf-8').strip().split(',')
-            if len(nmea_parts):
-                #print nmea_parts
-                try:
-                    if nmea_parts[0][3:] == 'ZDA' and len(nmea_parts) >= 5:
-                        tref = TimeReference()
-                        tref.header.stamp = now
-                        hour = int(nmea_parts[1][0:2])
-                        minute = int(nmea_parts[1][2:4])
-                        second = int(nmea_parts[1][4:6])
-                        ms = int(float(nmea_parts[1][6:])*1000000)
-                        day = int(nmea_parts[2])
-                        month = int(nmea_parts[3])
-                        year = int(nmea_parts[4])
-                        zda = datetime.datetime(year,month,day,hour,minute,second,ms)
-                        tref.time_ref = rospy.Time(calendar.timegm(zda.timetuple()),zda.microsecond*1000)
-                        tref.source = 'posmv'
-                        timeref_pub.publish(tref)
-                    if nmea_parts[0][3:] == 'GGA' and len(nmea_parts) >= 10:
-                        latitude = int(nmea_parts[2][0:2])+float(nmea_parts[2][2:])/60.0
-                        if nmea_parts[3] == 'S':
-                            latitude = -latitude
-                        longitude = int(nmea_parts[4][0:3])+float(nmea_parts[4][3:])/60.0
-                        if nmea_parts[5] == 'W':
-                            longitude = -longitude
-                        altitude = float(nmea_parts[9])
-                        nsf = NavSatFix()
-                        nsf.header.stamp = now
-                        nsf.header.frame_id = 'posmv_operator'
-                        nsf.latitude = latitude
-                        nsf.longitude = longitude
-                        nsf.altitude = altitude
-                        position_pub.publish(nsf)
-                    if nmea_parts[0][3:] == 'HDT' and len(nmea_parts) >= 2:
-                        heading = float(nmea_parts[1])
-                        nes = NavEulerStamped()
-                        nes.header.stamp = now
-                        nes.header.frame_id = 'posmv_operator'
-                        nes.orientation.heading = heading
-                        orientation_pub.publish(nes)
-                except ValueError:
-                    pass
-        
-            
+            try:
+                nmea_parts = nmea_in.decode('utf-8').strip().split(',')
+                if len(nmea_parts):
+                    #print nmea_parts
+                    try:
+                        if nmea_parts[0][3:] == 'ZDA' and len(nmea_parts) >= 5:
+                            tref = TimeReference()
+                            tref.header.stamp = now
+                            hour = int(nmea_parts[1][0:2])
+                            minute = int(nmea_parts[1][2:4])
+                            second = int(nmea_parts[1][4:6])
+                            ms = int(float(nmea_parts[1][6:])*1000000)
+                            day = int(nmea_parts[2])
+                            month = int(nmea_parts[3])
+                            year = int(nmea_parts[4])
+                            zda = datetime.datetime(year,month,day,hour,minute,second,ms)
+                            tref.time_ref = rospy.Time(calendar.timegm(zda.timetuple()),zda.microsecond*1000)
+                            tref.source = 'posmv'
+                            timeref_pub.publish(tref)
+                        if nmea_parts[0][3:] == 'GGA' and len(nmea_parts) >= 10:
+                            latitude = int(nmea_parts[2][0:2])+float(nmea_parts[2][2:])/60.0
+                            if nmea_parts[3] == 'S':
+                                latitude = -latitude
+                            longitude = int(nmea_parts[4][0:3])+float(nmea_parts[4][3:])/60.0
+                            if nmea_parts[5] == 'W':
+                                longitude = -longitude
+                            altitude = float(nmea_parts[9])
+                            nsf = NavSatFix()
+                            nsf.header.stamp = now
+                            nsf.header.frame_id = 'posmv_operator'
+                            nsf.latitude = latitude
+                            nsf.longitude = longitude
+                            nsf.altitude = altitude
+                            position_pub.publish(nsf)
+                        if nmea_parts[0][3:] == 'HDT' and len(nmea_parts) >= 2:
+                            heading = float(nmea_parts[1])
+                            nes = NavEulerStamped()
+                            nes.header.stamp = now
+                            nes.header.frame_id = 'posmv_operator'
+                            nes.orientation.heading = heading
+                            orientation_pub.publish(nes)
+                    except ValueError:
+                        pass
+            except UnicodeDecodeError:
+                pass
 
 
 if __name__ == '__main__':
