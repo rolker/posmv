@@ -39,7 +39,7 @@ def decode_time(d, gps_week, offset):
   elif t2_type == 2:
     return weeksecondstoutc(gps_week,d['time2'],0)
   elif t2_type == 1:
-    return weeksecondstoutc(gps_weel,d['time2'],offset)
+    return weeksecondstoutc(gps_week,d['time2'],offset)
   return None
 
 def posmv_listener():
