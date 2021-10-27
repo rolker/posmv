@@ -10,10 +10,10 @@ import datetime
 import calendar
 
 def posmv_nmea_listener():
-    position_pub = rospy.Publisher('/base/position',NavSatFix,queue_size=10)
-    timeref_pub = rospy.Publisher('/base/time_reference',TimeReference,queue_size=10)
-    orientation_pub = rospy.Publisher('/base/orientation',NavEulerStamped,queue_size=10)
     rospy.init_node('posmv_nmea')
+    position_pub = rospy.Publisher('~position',NavSatFix,queue_size=10)
+    timeref_pub = rospy.Publisher('~time_reference',TimeReference,queue_size=10)
+    orientation_pub = rospy.Publisher('~orientation',NavEulerStamped,queue_size=10)
     input_type = rospy.get_param('~input_type')
     input_address = rospy.get_param('~input','')
     input_speed = rospy.get_param('/~input_speed',0)
