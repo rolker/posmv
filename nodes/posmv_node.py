@@ -96,7 +96,7 @@ def posmv_listener():
               nsf.header.frame_id = posmv_frame
               nsf.latitude = d['latitude']
               nsf.longitude = d['longitude']
-              nsf.altitude = d['altitude']
+              nsf.altitude = 0.0 # d['altitude'] TODO, use heave
               if group_2 is not None:
                 nsf.position_covariance[0] = group_2['east_position_rms_error']**2
                 nsf.position_covariance[4] = group_2['north_position_rms_error']**2
