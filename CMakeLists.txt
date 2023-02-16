@@ -3,7 +3,7 @@ project(posmv)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
-  marine_msgs
+  project11_msgs
   sensor_msgs
   rospy
   diagnostic_msgs
@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 
 catkin_package(
-  CATKIN_DEPENDS geometry_msgs marine_msgs sensor_msgs rospy diagnostic_msgs
+  CATKIN_DEPENDS geometry_msgs project11_msgs sensor_msgs rospy diagnostic_msgs
 )
 
 include_directories(

@@ -5,7 +5,7 @@ import socket
 import rospy
 from  sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import TimeReference
-from marine_msgs.msg import NavEulerStamped
+from project11_msgs.msg import NavEulerStamped
 import datetime
 import calendar
 
